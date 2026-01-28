@@ -12,11 +12,11 @@ app.use(cors());
 app.use(express.json());
 
 // Configure email transporter using Resend's SMTP
-// This works on all Node versions and Railway
+// Using port 587 (TLS) instead of 465 (SSL) for Railway compatibility
 const transporter = nodemailer.createTransport({
   host: 'smtp.resend.com',
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false, // Use STARTTLS
   auth: {
     user: 'resend',
     pass: process.env.RESEND_API_KEY
