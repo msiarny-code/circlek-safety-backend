@@ -2,26 +2,13 @@
 // server-circlek-v2.js
 
 const express = require('express');
-const nodemailer = require('nodemailer');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 
 app.use(cors());
-app.use(express.json());
-
-// Configure email transporter using Resend's SMTP
-// Using port 587 (TLS) instead of 465 (SSL) for Railway compatibility
-const transporter = nodemailer.createTransport({
-  host: 'smtp.resend.com',
-  port: 587,
-  secure: false, // Use STARTTLS
-  auth: {
-    user: 'resend',
-    pass: process.env.RESEND_API_KEY
-  }
-});
+app.use(express.json({ limit: '10mb' })); // Increase limit for Excel attachments
 
 // API endpoint to send Circle K safety report
 app.post('/api/send-report', async (req, res) => {
@@ -365,26 +352,37 @@ app.post('/api/send-report', async (req, res) => {
       </html>
     `;
 
-    // Email options with Excel attachment
-    const mailOptions = {
-      from: process.env.SENDER_EMAIL || 'Circle K Safety <onboarding@resend.dev>',
-      to: recipientEmail,
-      subject: `Circle K Store #${storeNumber} - ${inspectionType} - ${date}`,
-      html: emailHTML,
-      attachments: [
-        {
-          filename: filename,
-          content: Buffer.from(excelBuffer, 'base64')
-        }
-      ]
-    };
+    // Send email using Resend HTTP API (works on Railway - no SMTP ports needed)
+    const resendResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: process.env.SENDER_EMAIL || 'Circle K Safety <onboarding@resend.dev>',
+        to: [recipientEmail],
+        subject: `Circle K Store #${storeNumber} - ${inspectionType} - ${date}`,
+        html: emailHTML,
+        attachments: [
+          {
+            filename: filename,
+            content: excelBuffer
+          }
+        ]
+      })
+    });
 
-    // Send email via Resend SMTP
-    await transporter.sendMail(mailOptions);
+    const resendData = await resendResponse.json();
+
+    if (!resendResponse.ok) {
+      throw new Error(resendData.message || 'Failed to send email via Resend');
+    }
 
     res.json({ 
       success: true, 
-      message: `Safety report sent successfully to ${recipientEmail}`
+      message: `Safety report sent successfully to ${recipientEmail}`,
+      emailId: resendData.id
     });
   } catch (error) {
     console.error('Error sending email:', error);
