@@ -2,7 +2,7 @@
 // server-circlek-v2.js
 
 const express = require('express');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -11,14 +11,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configure email transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
+// Configure Resend for email delivery
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // API endpoint to send Circle K safety report
 app.post('/api/send-report', async (req, res) => {
@@ -362,27 +356,28 @@ app.post('/api/send-report', async (req, res) => {
       </html>
     `;
 
-    // Email options with Excel attachment
-    const mailOptions = {
-      from: `"Circle K Safety" <${process.env.EMAIL_USER}>`,
-      to: recipientEmail, // Send to store-specific email
+    // Send email using Resend
+    const { data, error: resendError } = await resend.emails.send({
+      from: process.env.SENDER_EMAIL || 'Circle K Safety <onboarding@resend.dev>',
+      to: recipientEmail,
       subject: `Circle K Store #${storeNumber} - ${inspectionType} - ${date}`,
       html: emailHTML,
       attachments: [
         {
           filename: filename,
-          content: excelBuffer,
-          encoding: 'base64'
+          content: Buffer.from(excelBuffer, 'base64')
         }
       ]
-    };
+    });
 
-    // Send email
-    await transporter.sendMail(mailOptions);
+    if (resendError) {
+      throw new Error(resendError.message);
+    }
 
     res.json({ 
       success: true, 
-      message: `Safety report sent successfully to ${recipientEmail}` 
+      message: `Safety report sent successfully to ${recipientEmail}`,
+      emailId: data?.id
     });
   } catch (error) {
     console.error('Error sending email:', error);
