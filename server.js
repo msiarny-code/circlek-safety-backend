@@ -2,7 +2,7 @@
 // server-circlek-v2.js
 
 const express = require('express');
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -11,8 +11,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configure Resend for email delivery
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Configure email transporter using Resend's SMTP
+// This works on all Node versions and Railway
+const transporter = nodemailer.createTransport({
+  host: 'smtp.resend.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: 'resend',
+    pass: process.env.RESEND_API_KEY
+  }
+});
 
 // API endpoint to send Circle K safety report
 app.post('/api/send-report', async (req, res) => {
@@ -356,8 +365,8 @@ app.post('/api/send-report', async (req, res) => {
       </html>
     `;
 
-    // Send email using Resend
-    const { data, error: resendError } = await resend.emails.send({
+    // Email options with Excel attachment
+    const mailOptions = {
       from: process.env.SENDER_EMAIL || 'Circle K Safety <onboarding@resend.dev>',
       to: recipientEmail,
       subject: `Circle K Store #${storeNumber} - ${inspectionType} - ${date}`,
@@ -368,16 +377,14 @@ app.post('/api/send-report', async (req, res) => {
           content: Buffer.from(excelBuffer, 'base64')
         }
       ]
-    });
+    };
 
-    if (resendError) {
-      throw new Error(resendError.message);
-    }
+    // Send email via Resend SMTP
+    await transporter.sendMail(mailOptions);
 
     res.json({ 
       success: true, 
-      message: `Safety report sent successfully to ${recipientEmail}`,
-      emailId: data?.id
+      message: `Safety report sent successfully to ${recipientEmail}`
     });
   } catch (error) {
     console.error('Error sending email:', error);
