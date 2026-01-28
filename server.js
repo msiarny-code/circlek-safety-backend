@@ -353,37 +353,48 @@ app.post('/api/send-report', async (req, res) => {
       </html>
     `;
 
-    // Send email using Resend HTTP API (works on Railway - no SMTP ports needed)
-    const resendResponse = await fetch('https://api.resend.com/emails', {
+    // Send email using MailerSend HTTP API
+    // MailerSend allows sending to any email address on free tier (no domain verification required)
+    const mailerSendResponse = await fetch('https://api.mailersend.com/v1/email', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${process.env.MAILERSEND_API_KEY}`,
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: JSON.stringify({
-        from: process.env.SENDER_EMAIL || 'Circle K Safety <onboarding@resend.dev>',
-        to: [recipientEmail],
+        from: {
+          email: 'MS_CZPxeO@trial-0r83ql3jr5pg2vwr.mlsender.net',
+          name: 'Circle K Safety'
+        },
+        to: [
+          {
+            email: recipientEmail,
+            name: `Store ${storeNumber}`
+          }
+        ],
         subject: `Circle K Store #${storeNumber} - ${inspectionType} - ${date}`,
         html: emailHTML,
         attachments: [
           {
+            content: excelBuffer,
             filename: filename,
-            content: excelBuffer
+            disposition: 'attachment',
+            id: 'safety-report'
           }
         ]
       })
     });
 
-    const resendData = await resendResponse.json();
-
-    if (!resendResponse.ok) {
-      throw new Error(resendData.message || 'Failed to send email via Resend');
+    if (!mailerSendResponse.ok) {
+      const errorText = await mailerSendResponse.text();
+      console.error('MailerSend error:', errorText);
+      throw new Error(`Failed to send email via MailerSend: ${mailerSendResponse.status} ${errorText}`);
     }
 
     res.json({ 
       success: true, 
-      message: `Safety report sent successfully to ${recipientEmail}`,
-      emailId: resendData.id
+      message: `Safety report sent successfully to ${recipientEmail}`
     });
   } catch (error) {
     console.error('Error sending email:', error);
