@@ -373,7 +373,7 @@ app.post('/api/send-report', async (req, res) => {
       },
       body: JSON.stringify({
         from: {
-          email: 'MS_CZPxeO@trial-0r83ql3jr5pg2vwr.mlsender.net',
+          email: 'CKSafetyWalk@test-vz9dlem726n4kj50.mlsender.net',
           name: 'Circle K Safety'
         },
         to: [
