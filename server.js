@@ -4,6 +4,9 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const cors = require('cors');
+const { spawn } = require('child_process');
+const fs = require('fs').promises;
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -14,7 +17,7 @@ app.use(express.json({ limit: '10mb' })); // Increase limit for Excel attachment
 // API endpoint to send Circle K safety report
 app.post('/api/send-report', async (req, res) => {
   try {
-    const { name, storeNumber, employeeRole, date, responses, correctiveActions, filename, questionType, excelBuffer, recipientEmail } = req.body;
+    const { name, storeNumber, employeeRole, title, date, responses, filename, questionType, excelBuffer, recipientEmail } = req.body;
 
     // Calculate statistics
     let yesCount = 0;
@@ -22,10 +25,19 @@ app.post('/api/send-report', async (req, res) => {
     const noItems = [];
 
     Object.entries(responses).forEach(([question, response]) => {
-      if (response === 'Yes') yesCount++;
-      else if (response === 'No') {
+      // Handle new structure where response is an object with value, workOrder, correctiveAction
+      const answer = typeof response === 'object' ? response.value : response;
+      const workOrder = typeof response === 'object' ? response.workOrder : '';
+      const correctiveAction = typeof response === 'object' ? response.correctiveAction : '';
+      
+      if (answer === 'Yes') yesCount++;
+      else if (answer === 'No') {
         noCount++;
-        noItems.push(question);
+        noItems.push({
+          question,
+          workOrder: workOrder || 'N/A',
+          correctiveAction: correctiveAction || 'None specified'
+        });
       }
     });
 
@@ -322,16 +334,13 @@ app.post('/api/send-report', async (req, res) => {
                 <h3 class="section-title">⚠️ Issues Identified</h3>
                 ${noItems.map(item => `
                   <div class="issue-item">
-                    <div class="issue-text">${item}</div>
+                    <div class="issue-text"><strong>Question:</strong> ${item.question}</div>
+                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ffdddd;">
+                      <div style="margin-bottom: 5px;"><strong>Work Order:</strong> ${item.workOrder}</div>
+                      <div><strong>Corrective Action:</strong> ${item.correctiveAction}</div>
+                    </div>
                   </div>
                 `).join('')}
-                
-                ${correctiveActions ? `
-                  <div class="corrective-section">
-                    <div class="corrective-title">📋 Corrective Actions Taken:</div>
-                    <div class="corrective-text">${correctiveActions}</div>
-                  </div>
-                ` : ''}
               </div>
             ` : `
               <div class="issues-section">
@@ -364,7 +373,7 @@ app.post('/api/send-report', async (req, res) => {
       },
       body: JSON.stringify({
         from: {
-          email: 'CkSafetyWalk@test-vz9dlem726n4kj50.mlsender.net',
+          email: 'MS_CZPxeO@trial-0r83ql3jr5pg2vwr.mlsender.net',
           name: 'Circle K Safety'
         },
         to: [
