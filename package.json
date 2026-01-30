@@ -4,7 +4,7 @@
   "description": "Circle K Daily Safety Walk Backend API with Excel email attachments",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "pip3 install openpyxl --break-system-packages && node server.js",
     "dev": "nodemon server.js"
   },
   "keywords": ["circle-k", "safety", "inspection", "email", "excel"],
