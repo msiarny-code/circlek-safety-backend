@@ -21,7 +21,14 @@ def fill_store_personnel_template(data):
     ws['B4'] = data.get('name', '')
     ws['E4'] = data.get('storeNumber', '')
     ws['B5'] = data.get('employeeRole', '')
-    ws['E5'] = data.get('date', '')
+    
+    # Combine date and time for display
+    date_str = data.get('date', '')
+    time_str = data.get('time', '')
+    if time_str:
+        ws['E5'] = f"{date_str} {time_str} UTC-5"
+    else:
+        ws['E5'] = date_str
     
     # Questions in order (7 for store personnel)
     questions = [

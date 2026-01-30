@@ -17,7 +17,7 @@ app.use(express.json({ limit: '10mb' })); // Increase limit for Excel attachment
 // API endpoint to send Circle K safety report
 app.post('/api/send-report', async (req, res) => {
   try {
-    const { name, storeNumber, employeeRole, title, date, responses, recipientEmail } = req.body;
+    const { name, storeNumber, employeeRole, title, email, date, time, responses, recipientEmail } = req.body;
 
     // Generate Excel using appropriate template
     let excelBuffer, filename;
@@ -361,13 +361,19 @@ app.post('/api/send-report', async (req, res) => {
                 <span class="label">Employee Role:</span>
                 <span class="value">${employeeRole}</span>
               </div>
+              ${employeeRole === 'Non-Store Personnel' && title ? `
+              <div class="info-row">
+                <span class="label">Title/Position:</span>
+                <span class="value">${title}</span>
+              </div>
+              ` : ''}
               <div class="info-row">
                 <span class="label">Date:</span>
                 <span class="value">${new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
               <div class="info-row">
                 <span class="label">Report Time:</span>
-                <span class="value">${new Date().toLocaleString()}</span>
+                <span class="value">${time ? time + ' UTC-5' : new Date().toLocaleString()}</span>
               </div>
             </div>
 
@@ -463,9 +469,52 @@ app.post('/api/send-report', async (req, res) => {
       throw new Error(`Failed to send email via MailerSend: ${mailerSendResponse.status} ${errorText}`);
     }
 
+    // If Non-Store Personnel and email provided, send a copy to them
+    if (employeeRole === 'Non-Store Personnel' && email) {
+      try {
+        const copyResponse = await fetch('https://api.mailersend.com/v1/email', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.MAILERSEND_API_KEY}`,
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({
+            from: {
+              email: 'CKSafetyWalk@test-vz9dlem726n4kj50.mlsender.net',
+              name: 'Circle K Safety Walk'
+            },
+            to: [
+              {
+                email: email,
+                name: name
+              }
+            ],
+            subject: `[Copy] Circle K Store #${storeNumber} - ${inspectionType} - ${date}`,
+            html: emailHTML,
+            attachments: [
+              {
+                content: excelBuffer,
+                filename: filename,
+                disposition: 'attachment',
+                id: 'safety-report'
+              }
+            ]
+          })
+        });
+        
+        if (copyResponse.ok) {
+          console.log(`Copy sent to Non-Store Personnel: ${email}`);
+        }
+      } catch (copyError) {
+        console.error('Failed to send copy to Non-Store Personnel:', copyError);
+        // Don't fail the request if copy fails
+      }
+    }
+
     res.json({ 
       success: true, 
-      message: `Safety report sent successfully to ${recipientEmail}`
+      message: `Safety report sent successfully to ${recipientEmail}${email ? ` and ${email}` : ''}`
     });
   } catch (error) {
     console.error('Error sending email:', error);

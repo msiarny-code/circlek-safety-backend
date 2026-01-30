@@ -21,7 +21,14 @@ def fill_support_staff_template(data):
     ws['B5'] = data.get('name', '')
     ws['E5'] = data.get('storeNumber', '')
     ws['B6'] = data.get('title', '') or data.get('employeeRole', '')
-    ws['E6'] = data.get('date', '')
+    
+    # Combine date and time for display
+    date_str = data.get('date', '')
+    time_str = data.get('time', '')
+    if time_str:
+        ws['E6'] = f"{date_str} {time_str} UTC-5"
+    else:
+        ws['E6'] = date_str
     
     # Questions in order (matching template)
     questions = [
