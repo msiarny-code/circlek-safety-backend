@@ -19,15 +19,15 @@ app.post('/api/send-report', async (req, res) => {
   try {
     const { name, storeNumber, employeeRole, title, email, date, time, responses, recipientEmail } = req.body;
 
-    // Generate Excel using appropriate template
-    let excelBuffer, filename;
+    // Generate PDF using appropriate script
+    let pdfBuffer, filename;
     
     try {
       const isNonStore = employeeRole === 'Non-Store Personnel';
-      const scriptName = isNonStore ? 'fill_support_staff_template.py' : 'fill_store_personnel_template.py';
+      const scriptName = isNonStore ? 'generate_support_staff_pdf.py' : 'generate_store_personnel_pdf.py';
       const scriptPath = path.join(__dirname, scriptName);
       
-      // Use python3 (provided by nixpacks)
+      // Use python3 (provided by Dockerfile)
       const pythonProcess = spawn('python3', [scriptPath]);
       
       // Send data to Python script
@@ -37,6 +37,7 @@ app.post('/api/send-report', async (req, res) => {
         employeeRole,
         title: title || employeeRole,
         date,
+        time,
         responses
       };
       
@@ -61,7 +62,7 @@ app.post('/api/send-report', async (req, res) => {
           if (code === 0) {
             try {
               const output = JSON.parse(result);
-              excelBuffer = output.excelBuffer;
+              pdfBuffer = output.pdfBuffer;
               filename = output.filename;
               resolve();
             } catch (e) {
@@ -73,10 +74,10 @@ app.post('/api/send-report', async (req, res) => {
         });
       });
     } catch (error) {
-      console.error('Excel generation error:', error);
+      console.error('PDF generation error:', error);
       return res.status(500).json({ 
         success: false, 
-        message: 'Failed to generate Excel file',
+        message: 'Failed to generate PDF file',
         error: error.message 
       });
     }
@@ -422,7 +423,7 @@ app.post('/api/send-report', async (req, res) => {
             <div class="footer">
               <div class="footer-logo">CIRCLE K</div>
               <p>Automated Safety Walk Report</p>
-              <p style="margin: 5px 0 0 0;">Excel file: ${filename}</p>
+              <p style="margin: 5px 0 0 0;">PDF Report: ${filename}</p>
             </div>
           </div>
         </div>
@@ -454,7 +455,7 @@ app.post('/api/send-report', async (req, res) => {
         html: emailHTML,
         attachments: [
           {
-            content: excelBuffer,
+            content: pdfBuffer,
             filename: filename,
             disposition: 'attachment',
             id: 'safety-report'
@@ -494,7 +495,7 @@ app.post('/api/send-report', async (req, res) => {
             html: emailHTML,
             attachments: [
               {
-                content: excelBuffer,
+                content: pdfBuffer,
                 filename: filename,
                 disposition: 'attachment',
                 id: 'safety-report'
