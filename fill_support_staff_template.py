@@ -13,7 +13,7 @@ def fill_support_staff_template(data):
     """Fill the Excel template with safety walk data"""
     
     # Load the template
-    template_path = os.path.join(os.path.dirname(__file__), 'Support_Staff_Safety_Walk_Template.xlsx')
+    template_path = '/home/claude/Support_Staff_Safety_Walk_Template.xlsx'
     wb = openpyxl.load_workbook(template_path)
     ws = wb.active
     
@@ -21,14 +21,7 @@ def fill_support_staff_template(data):
     ws['B5'] = data.get('name', '')
     ws['E5'] = data.get('storeNumber', '')
     ws['B6'] = data.get('title', '') or data.get('employeeRole', '')
-    
-    # Combine date and time for display
-    date_str = data.get('date', '')
-    time_str = data.get('time', '')
-    if time_str:
-        ws['E6'] = f"{date_str} {time_str} UTC-5"
-    else:
-        ws['E6'] = date_str
+    ws['E6'] = data.get('date', '')
     
     # Questions in order (matching template)
     questions = [

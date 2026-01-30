@@ -34,11 +34,11 @@ def fill_store_personnel_template(data):
     questions = [
         "Is the parking lot free of cracks, pot holes, or any other tripping or slipping hazards?",
         "Are all dispensers operational and are hoses and nozzles in good repair?",
-        'Are the "Wet Floor" cones/signs visible in all areas during rain and mopping?',
+        'Are the "Wet Floor" cones/signs visible in all areas during rain and mopping? (Please ensure we dry mop often during these times and remove "Wet Floor" cones/signs when area is dry)',
         "Is the dispensed beverage floor area dry and free of any ice and spills?",
         "Are all Dispensed Beverage flavors and CO2 available?",
         "Is the sales floor free of boxes, totes, mop bucket, or anything else a customer could trip over?",
-        "The doors are NOT being propped open for a vendor delivery?"
+        "Are backroom doors closed or held open with a door stop? (Do not prop open with water or other merchandise)"
     ]
     
     responses = data.get('responses', {})
