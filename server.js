@@ -17,7 +17,68 @@ app.use(express.json({ limit: '10mb' })); // Increase limit for Excel attachment
 // API endpoint to send Circle K safety report
 app.post('/api/send-report', async (req, res) => {
   try {
-    const { name, storeNumber, employeeRole, title, date, responses, filename, questionType, excelBuffer, recipientEmail } = req.body;
+    const { name, storeNumber, employeeRole, title, date, responses, recipientEmail } = req.body;
+
+    // Generate Excel using appropriate template
+    let excelBuffer, filename;
+    
+    try {
+      const isNonStore = employeeRole === 'Non-Store Personnel';
+      const scriptName = isNonStore ? 'fill_support_staff_template.py' : 'fill_store_personnel_template.py';
+      const scriptPath = path.join(__dirname, scriptName);
+      
+      const pythonProcess = spawn('python3', [scriptPath]);
+      
+      // Send data to Python script
+      const dataToSend = {
+        name,
+        storeNumber,
+        employeeRole,
+        title: title || employeeRole,
+        date,
+        responses
+      };
+      
+      pythonProcess.stdin.write(JSON.stringify(dataToSend));
+      pythonProcess.stdin.end();
+      
+      // Collect output
+      let result = '';
+      let errorOutput = '';
+      
+      pythonProcess.stdout.on('data', (data) => {
+        result += data.toString();
+      });
+      
+      pythonProcess.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+      
+      // Wait for completion
+      await new Promise((resolve, reject) => {
+        pythonProcess.on('close', (code) => {
+          if (code === 0) {
+            try {
+              const output = JSON.parse(result);
+              excelBuffer = output.excelBuffer;
+              filename = output.filename;
+              resolve();
+            } catch (e) {
+              reject(new Error('Failed to parse Python output: ' + e.message));
+            }
+          } else {
+            reject(new Error(`Python script exited with code ${code}: ${errorOutput}`));
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Excel generation error:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Failed to generate Excel file',
+        error: error.message 
+      });
+    }
 
     // Calculate statistics
     let yesCount = 0;
@@ -374,7 +435,7 @@ app.post('/api/send-report', async (req, res) => {
       body: JSON.stringify({
         from: {
           email: 'CKSafetyWalk@test-vz9dlem726n4kj50.mlsender.net',
-          name: 'Circle K Safety'
+          name: 'Circle K Safety Walk'
         },
         to: [
           {

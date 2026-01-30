@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fill Circle K Support Staff Safety Walk Excel template with inspection data
+Fill Circle K Store Personnel Safety Walk Excel template with inspection data
 """
 import openpyxl
 from openpyxl.styles import Font
@@ -9,39 +9,35 @@ import json
 import base64
 import os
 
-def fill_support_staff_template(data):
-    """Fill the Excel template with safety walk data"""
+def fill_store_personnel_template(data):
+    """Fill the Store Personnel Excel template with safety walk data"""
     
     # Load the template
-    template_path = os.path.join(os.path.dirname(__file__), 'Support_Staff_Safety_Walk_Template.xlsx')
+    template_path = os.path.join(os.path.dirname(__file__), 'Store_Personnel_Safety_Walk_Template.xlsx')
     wb = openpyxl.load_workbook(template_path)
     ws = wb.active
     
     # Fill header info
-    ws['B5'] = data.get('name', '')
-    ws['E5'] = data.get('storeNumber', '')
-    ws['B6'] = data.get('title', '') or data.get('employeeRole', '')
-    ws['E6'] = data.get('date', '')
+    ws['B4'] = data.get('name', '')
+    ws['E4'] = data.get('storeNumber', '')
+    ws['B5'] = data.get('employeeRole', '')
+    ws['E5'] = data.get('date', '')
     
-    # Questions in order (matching template)
+    # Questions in order (7 for store personnel)
     questions = [
         "Is the parking lot free of cracks, pot holes, or any other tripping or slipping hazards?",
         "Are all dispensers operational and are hoses and nozzles in good repair?",
-        'Are the "Wet Floor" cones/signs visible in all areas during rain and mopping? (Please ensure we dry mop often during these times and remove "Wet Floor" cones/signs when area is dry)',
+        'Are the "Wet Floor" cones/signs visible in all areas during rain and mopping?',
         "Is the dispensed beverage floor area dry and free of any ice and spills?",
         "Are all Dispensed Beverage flavors and CO2 available?",
         "Is the sales floor free of boxes, totes, mop bucket, or anything else a customer could trip over?",
-        "Are backroom doors closed or held open with a door stop? (Do not prop open with water or other merchandise)",
-        "Is there a clear passage to all exit doors?",
-        "Is the area in front of the electrical panels clear of merchandise/boxes?",
-        "Are the fire extinguishers hanging and clear of merchandise/boxes?",
-        "Is the CO2 detector clear of merchandise/boxes and located near the floor?"
+        "The doors are NOT being propped open for a vendor delivery?"
     ]
     
     responses = data.get('responses', {})
     
-    # Fill answers starting at row 9
-    row = 9
+    # Fill answers starting at row 8
+    row = 8
     for question in questions:
         response_data = responses.get(question, {})
         
@@ -69,7 +65,8 @@ def fill_support_staff_template(data):
         row += 1
     
     # Save filled template
-    filename = f"CircleK_Store{data.get('storeNumber', '')}_SupportStaff_{data.get('date', '')}.xlsx"
+    role_short = data.get('employeeRole', '').replace(' ', '')
+    filename = f"CircleK_Store{data.get('storeNumber', '')}_{role_short}_{data.get('date', '')}.xlsx"
     filepath = f"/tmp/{filename}"
     wb.save(filepath)
     
@@ -81,7 +78,7 @@ if __name__ == '__main__':
     data = json.loads(data_json)
     
     # Fill the template
-    filepath, filename = fill_support_staff_template(data)
+    filepath, filename = fill_store_personnel_template(data)
     
     # Read and encode as base64
     with open(filepath, 'rb') as f:
