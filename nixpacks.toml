@@ -1,11 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs", "python39", "python39Packages.pip"]
+aptPkgs = ["python3", "python3-pip"]
 
 [phases.install]
-cmds = [
-  "npm install",
-  "pip install openpyxl"
-]
-
-[start]
-cmd = "node server.js"
+cmds = ["npm install", "pip3 install -r requirements.txt"]
