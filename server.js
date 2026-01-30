@@ -27,6 +27,7 @@ app.post('/api/send-report', async (req, res) => {
       const scriptName = isNonStore ? 'fill_support_staff_template.py' : 'fill_store_personnel_template.py';
       const scriptPath = path.join(__dirname, scriptName);
       
+      // Use python3 (provided by nixpacks)
       const pythonProcess = spawn('python3', [scriptPath]);
       
       // Send data to Python script
