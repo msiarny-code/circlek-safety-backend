@@ -13,7 +13,7 @@ def fill_support_staff_template(data):
     """Fill the Excel template with safety walk data"""
     
     # Load the template
-    template_path = '/home/claude/Support_Staff_Safety_Walk_Template.xlsx'
+    template_path = os.path.join(os.path.dirname(__file__), 'Support_Staff_Safety_Walk_Template.xlsx'
     wb = openpyxl.load_workbook(template_path)
     ws = wb.active
     
