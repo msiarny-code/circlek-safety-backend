@@ -344,7 +344,8 @@ app.post('/api/send-report', async (req, res) => {
           <div class="header">
             <div class="circle-k-logo">CIRCLE K</div>
             <div class="orange-accent"></div>
-            <h1>Daily Safety Walk Report</h1>
+            <h1>Store Safety Walk</h1>
+            <p style="margin: 10px 0 15px 0; font-size: 14px; color: #666; font-weight: 600;">Please print attachment and place in the Store's Safety Binder</p>
             <div class="inspection-badge">${inspectionType}</div>
           </div>
           

@@ -3,7 +3,7 @@
 Generate Circle K Support Staff Safety Walk PDF report
 """
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -17,7 +17,9 @@ def generate_support_staff_pdf(data):
     """Generate PDF for Support Staff Safety Walk"""
     
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.3*inch, bottomMargin=0.3*inch)
+    # Use landscape orientation
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), topMargin=0.4*inch, bottomMargin=0.4*inch,
+                           leftMargin=0.5*inch, rightMargin=0.5*inch)
     
     story = []
     styles = getSampleStyleSheet()
@@ -105,14 +107,14 @@ def generate_support_staff_pdf(data):
         
         table_data.append([
             str(i),
-            Paragraph(question, ParagraphStyle('Question', fontSize=6.5, leading=7.5)),
+            Paragraph(question, ParagraphStyle('Question', fontSize=8, leading=9)),
             answer,
             work_order,
-            Paragraph(corrective, ParagraphStyle('Notes', fontSize=6.5, leading=7.5)) if corrective else ''
+            Paragraph(corrective, ParagraphStyle('Notes', fontSize=8, leading=9)) if corrective else ''
         ])
     
-    # Create table with adjusted column widths
-    questions_table = Table(table_data, colWidths=[0.3*inch, 3.6*inch, 0.5*inch, 0.7*inch, 1.6*inch])
+    # Create table with adjusted column widths for landscape
+    questions_table = Table(table_data, colWidths=[0.3*inch, 5.3*inch, 0.6*inch, 0.8*inch, 2.5*inch])
     
     # Style the table
     table_style = [
@@ -120,11 +122,11 @@ def generate_support_staff_pdf(data):
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FF6B35')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 7),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         
         # Data rows
-        ('FONTSIZE', (0, 1), (-1, -1), 6.5),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
         ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # Numbers
         ('ALIGN', (2, 1), (2, -1), 'CENTER'),  # Yes/No
         ('ALIGN', (3, 1), (3, -1), 'CENTER'),  # Work Order
@@ -134,11 +136,11 @@ def generate_support_staff_pdf(data):
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
         ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#333333')),
         
-        # Padding (reduced for 11 questions)
-        ('TOPPADDING', (0, 0), (-1, -1), 2),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-        ('LEFTPADDING', (0, 0), (-1, -1), 2),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        # Padding
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('LEFTPADDING', (0, 0), (-1, -1), 3),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 3),
     ]
     
     # Color code Yes/No answers

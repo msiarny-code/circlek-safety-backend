@@ -115,11 +115,11 @@ def generate_store_personnel_pdf(data):
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FF6B35')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         
         # Data rows
-        ('FONTSIZE', (0, 1), (-1, -1), 7),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
         ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # Numbers
         ('ALIGN', (2, 1), (2, -1), 'CENTER'),  # Yes/No
         ('ALIGN', (3, 1), (3, -1), 'CENTER'),  # Work Order
@@ -130,10 +130,10 @@ def generate_store_personnel_pdf(data):
         ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#333333')),
         
         # Padding
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-        ('LEFTPADDING', (0, 0), (-1, -1), 3),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
     ]
     
     # Color code Yes/No answers
